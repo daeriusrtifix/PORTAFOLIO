@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAERIUS // DUNGEON CRAWLER v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --fg: #25ff00;
+      --fg-dim: #117700;
+      --danger: #ff2a55;
+      --cyan: #00f0ff;
+      --amber: #ffcc00;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Efecto CRT Scanlines */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.25) 0px,
+        rgba(0, 0, 0, 0.25) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      border-bottom: 2px solid var(--fg);
+      background: #030a03;
+    }
+
+    .brand {
+      font-family: 'Silkscreen', monospace;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-sys {
+      background: #000;
+      color: var(--fg);
+      border: 1.5px solid var(--fg);
+      padding: 6px 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .btn-sys:hover {
+      background: var(--fg);
+      color: #000;
+    }
+
+    /* PANTALLA DE SELECCIÓN DE PERSONAJE */
+    #char-select-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .select-title {
+      font-family: 'Silkscreen', monospace;
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      text-align: center;
+      margin-bottom: 8px;
+      color: var(--white);
+    }
+
+    .select-sub {
+      color: var(--fg);
+      margin-bottom: 28px;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .archetype-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      width: 100%;
+    }
+
+    .archetype-card {
+      border: 2px solid var(--fg);
+      background: #020802;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .archetype-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 18px rgba(37, 255, 0, 0.35);
+      background: #061406;
+    }
+
+    .archetype-name {
+      font-family: 'Silkscreen', monospace;
+      font-size: 1.2rem;
+      color: var(--white);
+      border-bottom: 1px dashed var(--fg);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .archetype-ascii {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.15;
+      color: var(--fg);
+      background: #000;
+      border: 1px solid var(--fg-dim);
+      padding: 10px;
+      text-align: center;
+      margin-bottom: 12px;
+      white-space: pre;
+    }
+
+    .archetype-stats {
+      font-size: 0.82rem;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .archetype-stats span {
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    /* INTERFAZ PRINCIPAL DEL JUEGO */
+    #game-screen {
+      display: none;
+      flex: 1;
+      padding: 16px 24px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 18px;
+    }
+
+    #game-screen.active {
+      display: grid;
+    }
+
+    /* COLUMNA IZQUIERDA: VIEWPORT + CONTROLES */
+    .viewport-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .viewport-box {
+      border: 2px solid var(--fg);
+      background: #000;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      min-height: 360px;
+      overflow: hidden;
+    }
+
+    .viewport-hud-top {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--cyan);
+      z-index: 5;
+    }
+
+    #ascii-canvas {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(9px, 1.15vw, 13px);
+      line-height: 1.05;
+      white-space: pre;
+      color: var(--fg);
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    /* OVERLAY DE ARMA EN PRIMERA PERSONA */
+    #weapon-overlay {
+      position: absolute;
+      bottom: 4px;
+      right: 18%;
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(10px, 1.2vw, 14px);
+      line-height: 1.05;
+      white-space: pre;
+      color: var(--white);
+      text-shadow: 0 0 6px var(--fg);
+      pointer-events: none;
+      transition: transform 0.08s ease;
+    }
+
+    /* HUD DE ENEMIGO EN COMBATE */
+    #enemy-banner {
+      display: none;
+      position: absolute;
+      top: 34px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.92);
+      border: 2px solid var(--danger);
+      padding: 6px 16px;
+      text-align: center;
+      z-index: 10;
+      min-width: 240px;
+    }
+
+    #enemy-banner.active {
+      display: block;
+    }
+
+    .enemy-title {
+      font-family: 'Silkscreen', monospace;
+      color: var(--danger);
+      font-size: 0.9rem;
+    }
+
+    .enemy-hp-bar {
+      width: 100%;
+      height: 8px;
+      background: #220008;
+      border: 1px solid var(--danger);
+      margin-top: 4px;
+    }
+
+    .enemy-hp-fill {
+      height: 100%;
+      background: var(--danger);
+      width: 100%;
+      transition: width 0.2s ease;
+    }
+
+    /* PANEL DE CONTROLES */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .control-panel {
+      border: 2px solid var(--fg);
+      padding: 12px;
+      background: #020702;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .panel-label {
+      font-size: 0.75rem;
+      color: var(--white);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--fg-dim);
+      padding-bottom: 4px;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      max-width: 210px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .btn-pad {
+      background: #051405;
+      color: var(--fg);
+      border: 1.5px solid var(--fg);
+      padding: 12px 6px;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .btn-pad:active {
+      background: var(--fg);
+      color: #000;
+    }
+
+    .action-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .btn-act {
+      background: #051405;
+      color: var(--fg);
+      border: 1.5px solid var(--fg);
+      padding: 10px 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .btn-act:hover {
+      background: var(--fg);
+      color: #000;
+    }
+
+    .btn-act.atk { border-color: var(--danger); color: var(--danger); }
+    .btn-act.atk:hover { background: var(--danger); color: #000; }
+    .btn-act.skl { border-color: var(--cyan); color: var(--cyan); }
+    .btn-act.skl:hover { background: var(--cyan); color: #000; }
+    .btn-act.heal { border-color: var(--amber); color: var(--amber); }
+    .btn-act.heal:hover { background: var(--amber); color: #000; }
+
+    /* COLUMNA DERECHA: DOOMGUY HUD + MINIMAPA + LOG */
+    .hud-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* DOOMGUY PORTRAIT & STATS */
+    .doom-hud {
+      border: 2px solid var(--fg);
+      background: #020702;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 135px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .portrait-frame {
+      border: 2px solid var(--fg);
+      background: #000;
+      padding: 6px;
+      text-align: center;
+    }
+
+    #doom-portrait {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      line-height: 1.1;
+      white-space: pre;
+      color: var(--fg);
+    }
+
+    .portrait-frame.damaged {
+      border-color: var(--danger);
+      background: #240008;
+    }
+
+    .portrait-frame.damaged #doom-portrait {
+      color: var(--danger);
+    }
+
+    .portrait-frame.grin {
+      border-color: var(--amber);
+    }
+
+    .portrait-frame.grin #doom-portrait {
+      color: var(--amber);
+    }
+
+    .stats-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.82rem;
+    }
+
+    .stat-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #0a1f0a;
+      border: 1px solid var(--fg);
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--fg);
+      transition: width 0.2s ease;
+    }
+
+    .bar-fill.ram {
+      background: var(--cyan);
+    }
+
+    /* MINIMAPA */
+    .minimap-box {
+      border: 2px solid var(--fg);
+      background: #020702;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #minimap-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.05;
+      white-space: pre;
+      letter-spacing: 2px;
+      margin: 4px 0;
+    }
+
+    .legend {
+      font-size: 0.68rem;
+      color: #88cc88;
+      text-align: center;
+    }
+
+    /* CONSOLA LOG */
+    .log-box {
+      border: 2px solid var(--fg);
+      background: #000;
+      padding: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 140px;
+    }
+
+    #log-feed {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 170px;
+      font-size: 0.76rem;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-msg.dmg { color: var(--danger); }
+    .log-msg.loot { color: var(--amber); }
+    .log-msg.sys { color: var(--cyan); }
+
+    /* MODAL DE RECOMPENSA (HUEVO DE PASCUA) */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.92);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      border: 3px solid var(--fg);
+      background: #030a03;
+      max-width: 560px;
+      width: 100%;
+      padding: 26px;
+      box-shadow: 0 0 30px rgba(37, 255, 0, 0.4);
+    }
+
+    .modal-title {
+      font-family: 'Silkscreen', monospace;
+      font-size: 1.35rem;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+
+    .reward-list {
+      border: 1px dashed var(--fg);
+      background: #000;
+      padding: 14px;
+      margin: 16px 0;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-download {
+      background: var(--fg);
+      color: #000;
+      border: none;
+      padding: 12px 18px;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .btn-download:hover {
+      background: var(--white);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 920px) {
+      #game-screen.active {
+        grid-template-columns: 1fr;
+      }
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">DAERIUS // DUNGEON CRAWLER v2.0</div>
+    <div class="header-actions">
+      <button class="btn-sys" onclick="generateNewDungeon()">[ NUEVO MAPA ]</button>
+      <button class="btn-sys" onclick="returnToSelect()">[ CAMBIAR CLASE ]</button>
+    </div>
+  </header>
+
+  <!-- PANTALLA 1: SELECCIÓN DE PERSONAJE -->
+  <section id="char-select-screen">
+    <h1 class="select-title">SELECCIONA TU ARQUETIPO DIGITAL</h1>
+    <p class="select-sub">Explora el laberinto procedural, sobrevive a las anomalías y extrae los 3 Fragmentos de Datos.</p>
+
+    <div class="archetype-grid" id="archetype-cards"></div>
+  </section>
+
+  <!-- PANTALLA 2: JUEGO EN PRIMERA PERSONA -->
+  <main id="game-screen">
+    <!-- IZQUIERDA: VIEWPORT 3D ASCII + CONTROLES -->
+    <div class="viewport-col">
+      <div class="viewport-box">
+        <div class="viewport-hud-top">
+          <span id="hud-coords">NODO: [01,01] // NORTE</span>
+          <span id="hud-wall-type">MURO: CONCRETO_CYBER</span>
+        </div>
+
+        <div id="enemy-banner">
+          <div class="enemy-title" id="enemy-hud-name">VIRUS.EXE</div>
+          <div style="font-size:0.72rem; color:#fff;" id="enemy-hud-hp">HP: 40/40</div>
+          <div class="enemy-hp-bar">
+            <div class="enemy-hp-fill" id="enemy-hud-bar"></div>
+          </div>
+        </div>
+
+        <pre id="ascii-canvas"></pre>
+        <pre id="weapon-overlay"></pre>
+      </div>
+
+      <div class="controls-grid">
+        <div class="control-panel">
+          <div class="panel-label">NAVEGACIÓN (W,A,S,D / FLECHAS)</div>
+          <div class="dpad">
+            <div></div>
+            <button class="btn-pad" onclick="handleMove('forward')">▲ W</button>
+            <div></div>
+            <button class="btn-pad" onclick="handleMove('left')">◄ A</button>
+            <button class="btn-pad" onclick="handleMove('back')">▼ S</button>
+            <button class="btn-pad" onclick="handleMove('right')">► D</button>
+          </div>
+        </div>
+
+        <div class="control-panel">
+          <div class="panel-label">MÓDULOS DE COMBATE & SISTEMA</div>
+          <div class="action-btns">
+            <button class="btn-act atk" id="btn-atk-name" onclick="actionAttack()">⚔️ ATACAR</button>
+            <button class="btn-act skl" id="btn-skl-name" onclick="actionSkill()">⚡ SOBRECARGA</button>
+            <button class="btn-act heal" onclick="actionHeal()">🧪 PARCHE_HP</button>
+            <button class="btn-act" onclick="actionScan()">📡 ESCANEAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DERECHA: RETRATO DOOMGUY + MINIMAPA + LOG -->
+    <div class="hud-col">
+      <div class="doom-hud">
+        <div class="portrait-frame" id="portrait-box">
+          <pre id="doom-portrait"></pre>
+          <div style="font-size:0.65rem; margin-top:4px; color:var(--white);" id="hud-class-label">NETRUNNER</div>
+        </div>
+
+        <div class="stats-box">
+          <div class="stat-row">
+            <div class="stat-header">
+              <span>INTEGRIDAD (HP)</span>
+              <span id="hud-hp-text">100/100</span>
+            </div>
+            <div class="bar-bg"><div class="bar-fill" id="hud-hp-bar"></div></div>
+          </div>
+
+          <div class="stat-row">
+            <div class="stat-header">
+              <span>ENERGÍA (RAM)</span>
+              <span id="hud-ram-text">60/60</span>
+            </div>
+            <div class="bar-bg"><div class="bar-fill ram" id="hud-ram-bar"></div></div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--fg-dim); padding-top:6px;">
+            <span>ATAQUE BASE: <strong id="hud-atk-val" style="color:var(--white);">14</strong></span>
+            <span>FRAGMENTOS: <strong id="hud-keys-val" style="color:var(--amber);">0/3</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="minimap-box">
+        <div class="panel-label" style="width:100%; text-align:center;">RADAR TOPOLÓGICO PROCEDURAL</div>
+        <pre id="minimap-display"></pre>
+        <div class="legend">@:TÚ | K:FRAGMENTO | E:ANOMALÍA | C:NÚCLEO | #/%/+:MUROS</div>
+      </div>
+
+      <div class="log-box">
+        <div class="panel-label">TERMINAL DE EVENTOS</div>
+        <div id="log-feed"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL EASTER EGG -->
+  <div class="modal-overlay" id="reward-modal">
+    <div class="modal-card">
+      <h2 class="modal-title">// ACCESO ROOT CONCEDIDO //</h2>
+      <p style="font-size:0.86rem; line-height:1.5;">
+        Has descifrado el laberinto procedural y alcanzado el Núcleo de <strong>DAERIUS.AGENCY</strong>. Como artefacto de recompensa por explorar este huevo de pascua, puedes descargar el paquete exclusivo de diseño:
+      </p>
+      <div class="reward-list">
+        <div><strong>PAQUETE: MONTAJE DOG SPACE.PNG</strong></div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-download" onclick="downloadKit()">⬇ DESCARGAR WALLPAPER PNG</button>
+        <button class="btn-sys" onclick="closeModal()">SEGUIR EXPLORANDO</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. DEFINICIÓN DE ARQUETIPOS Y RETRATOS DOOM
+    // ==========================================
+    const ARCHETYPES = [
+      {
+        id: 'netrunner',
+        name: 'NETRUNNER',
+        hp: 100,
+        ram: 70,
+        atk: 13,
+        weaponName: 'KATANA_MONO',
+        skillName: 'BREACH_RAM',
+        desc: 'Infiltrador ágil con alta capacidad de procesamiento y cortes de alta frecuencia.',
+        portraits: {
+          healthy: [
+            "  .-------.  ",
+            " / [■]-[■] \\ ",
+            "|     ^     |",
+            "|   \\___/   |",
+            " \\_________/ "
+          ],
+          lookLeft: [
+            "  .-------.  ",
+            " / [■]-[■] \\ ",
+            "|   <       |",
+            "|   \\___/   |",
+            " \\_________/ "
+          ],
+          lookRight: [
+            "  .-------.  ",
+            " / [■]-[■] \\ ",
+            "|       >   |",
+            "|   \\___/   |",
+            " \\_________/ "
+          ],
+          bruised: [
+            "  .-------.  ",
+            " / [x]-[■] \\ ",
+            "|  '  ^     |",
+            "|   /---\\   |",
+            " \\_________/ "
+          ],
+          critical: [
+            "  .-------.  ",
+            " / [x]-[x] \\ ",
+            "| '  / \\  ' |",
+            "|  ' ~~~ '  |",
+            " \\_________/ "
+          ],
+          grin: [
+            "  .-------.  ",
+            " / [^]-[^] \\ ",
+            "|     v     |",
+            "|  \\=====/  |",
+            " \\_________/ "
+          ]
+        },
+        weaponFrames: [
+          [
+            "      /\\    ",
+            "     /  \\   ",
+            "    / // \\  ",
+            "   / //   \\ ",
+            "  [======]  ",
+            "    |  |    "
+          ],
+          [
+            "   \\        ",
+            "    \\  /\\   ",
+            "     \\/  \\  ",
+            "     / // \\ ",
+            "   [======] ",
+            "     |  |   "
+          ]
+        ]
+      },
+      {
+        id: 'cyberpunk',
+        name: 'CYBER-PUNK',
+        hp: 130,
+        ram: 45,
+        atk: 17,
+        weaponName: 'PUÑO_HIDRÁULICO',
+        skillName: 'OVERDRIVE',
+        desc: 'Tanque urbano con implantes pesados, cresta de neón y fuerza bruta.',
+        portraits: {
+          healthy: [
+            "   \\|/\\|/    ",
+            "  .-=====-.  ",
+            " | (O) (O) | ",
+            " |   [_]   | ",
+            "  \\_______/  "
+          ],
+          lookLeft: [
+            "   \\|/\\|/    ",
+            "  .-=====-.  ",
+            " |(O) (O)  | ",
+            " |   [_]   | ",
+            "  \\_______/  "
+          ],
+          lookRight: [
+            "   \\|/\\|/    ",
+            "  .-=====-.  ",
+            " |  (O) (O)| ",
+            " |   [_]   | ",
+            "  \\_______/  "
+          ],
+          bruised: [
+            "   \\|/\\|/    ",
+            "  .-=====-.  ",
+            " | (x) (O) | ",
+            " | ' [~]   | ",
+            "  \\_______/  "
+          ],
+          critical: [
+            "   \\|/\\|/    ",
+            "  .-=====-.  ",
+            " | (*) (*) | ",
+            " |' [===] '| ",
+            "  \\_______/  "
+          ],
+          grin: [
+            "   \\|/\\|/    ",
+            "  .-=====-.  ",
+            " | (>) (<) | ",
+            " |  \\###/  | ",
+            "  \\_______/  "
+          ]
+        },
+        weaponFrames: [
+          [
+            "   .-----.  ",
+            "  | [#|#] | ",
+            "  |=======| ",
+            "  |  |||  | ",
+            "   \\_____/  "
+          ],
+          [
+            "  .-------. ",
+            " | [##|##] |",
+            " |=========|",
+            " |   |||   |",
+            "  \\_______/ "
+          ]
+        ]
+      },
+      {
+        id: 'technomage',
+        name: 'TECHNO-MAGE',
+        hp: 85,
+        ram: 100,
+        atk: 11,
+        weaponName: 'BÁCULO_TESLA',
+        skillName: 'ARCO_VOLTAICO',
+        desc: 'Tecno-chamán que manipula corrientes electromagnéticas y código corrupto.',
+        portraits: {
+          healthy: [
+            "    /\\_/\\    ",
+            "  ./     \\.  ",
+            " |  <o> <o> |",
+            " |    |    | ",
+            "  \\_______/  "
+          ],
+          lookLeft: [
+            "    /\\_/\\    ",
+            "  ./     \\.  ",
+            " | <o> <o>  |",
+            " |    |    | ",
+            "  \\_______/  "
+          ],
+          lookRight: [
+            "    /\\_/\\    ",
+            "  ./     \\.  ",
+            " |  <o> <o> |",
+            " |    |    | ",
+            "  \\_______/  "
+          ],
+          bruised: [
+            "    /\\_/\\    ",
+            "  ./     \\.  ",
+            " |  <-> <o> |",
+            " |  ' |    | ",
+            "  \\_______/  "
+          ],
+          critical: [
+            "    /\\_/\\    ",
+            "  ./     \\.  ",
+            " |  <*> <*> |",
+            " | ' /_\\ ' | ",
+            "  \\_______/  "
+          ],
+          grin: [
+            "    /\\_/\\    ",
+            "  ./     \\.  ",
+            " |  <^> <^> |",
+            " |   \\_/   | ",
+            "  \\_______/  "
+          ]
+        },
+        weaponFrames: [
+          [
+            "     (*)    ",
+            "    / | \\   ",
+            "      |     ",
+            "     [=]    ",
+            "      |     "
+          ],
+          [
+            "   \\ (*) /  ",
+            "   -- * --  ",
+            "    / | \\   ",
+            "     [=]    ",
+            "      |     "
+          ]
+        ]
+      }
+    ];
+
+    // ==========================================
+    // 2. ENEMIGOS CON SPRITES ASCII MULTI-FRAME
+    // ==========================================
+    const ENEMY_DB = [
+      {
+        name: 'VIRUS_TROYANO.v4',
+        hp: 42,
+        atk: 9,
+        frames: [
+          [
+            "    \\  |  /    ",
+            "   .-'---'-.   ",
+            "  /  (X) (X) \\ ",
+            " |    ___    | ",
+            "  \\  /|||\\  /  ",
+            "   '/ | | \\'   "
+          ],
+          [
+            "   -  \\|/  -   ",
+            "   .-'---'-.   ",
+            "  /  (O) (O) \\ ",
+            " |   /___\\   | ",
+            "  \\  \\|||/  /  ",
+            "  /  / | \\  \\  "
+          ]
+        ]
+      },
+      {
+        name: 'GÓLEM_DE_DATOS',
+        hp: 65,
+        atk: 13,
+        frames: [
+          [
+            "   [=======]   ",
+            "  |[ 0 ] [ 1 ]|",
+            "  |   [===]   |",
+            " /|###########|\\",
+            "/ |###|   |###| \\",
+            "  |___|   |___|  "
+          ],
+          [
+            "   [=======]   ",
+            "  |[ 1 ] [ 0 ]|",
+            "  |   [===]   |",
+            "\\ |###########| /",
+            " \\|###|   |###|/ ",
+            "  |___|   |___|  "
+          ]
+        ]
+      },
+      {
+        name: 'ESPECTRO_GLITCH',
+        hp: 50,
+        atk: 15,
+        frames: [
+          [
+            "    .-----.    ",
+            "   / #   # \\   ",
+            "  |  0   0  |  ",
+            "  |   ~~~   |  ",
+            "   \\ /\\ /\\ /   ",
+            "    ~  ~  ~    "
+          ],
+          [
+            "   .-------.   ",
+            "  /  #   #  \\  ",
+            " |   -   -   | ",
+            " |    ===    | ",
+            "  \\ /\\ /\\ /\\ / ",
+            "   ~  ~  ~  ~  "
+          ]
+        ]
+      }
+    ];
+
+    // ==========================================
+    // 3. ESTADO GLOBAL Y GENERADOR PROCEDURAL
+    // ==========================================
+    const MAP_SIZE = 13;
+    let map = [];
+    // Códigos de celda:
+    // 0: Piso libre
+    // 1: Muro Concreto Cyber (#)
+    // 2: Muro Servidor Parpadeante (%)
+    // 3: Muro Reja Neón (+)
+    // 4: Fragmento de Datos (K)
+    // 5: Núcleo de Salida (C)
+    // 8: Enemigo (E)
+
+    const WALL_NAMES = {
+      1: 'CONCRETO_CYBER [#]',
+      2: 'SERVIDOR_ACTIVO [%]',
+      3: 'REJA_DE_NEÓN [+]'
+    };
+
+    const DX = [0, 1, 0, -1];
+    const DY = [-1, 0, 1, 0];
+    const DIRS = ['NORTE', 'ESTE', 'SUR', 'OESTE'];
+
+    let state = {
+      archetype: ARCHETYPES[0],
+      x: 1,
+      y: 1,
+      dir: 1,
+      hp: 100,
+      maxHp: 100,
+      ram: 70,
+      maxRam: 70,
+      atk: 13,
+      keys: 0,
+      inCombat: false,
+      enemy: null,
+      animTick: 0,
+      bobOffset: 0,
+      weaponAttacking: false,
+      portraitOverride: null,
+      lookDir: 0
+    };
+
+    // Inicializar tarjetas de selección
+    function initArchetypeSelection() {
+      const container = document.getElementById('archetype-cards');
+      container.innerHTML = '';
+      ARCHETYPES.forEach((arch, idx) => {
+        const card = document.createElement('div');
+        card.className = 'archetype-card';
+        card.onclick = () => startGame(idx);
+        card.innerHTML = `
+          <div>
+            <div class="archetype-name">${arch.name}</div>
+            <div class="archetype-ascii">${arch.portraits.healthy.join('\n')}</div>
+            <div class="archetype-stats">
+              <div>HP: <span>${arch.hp}</span> | RAM: <span>${arch.ram}</span> | ATK: <span>${arch.atk}</span></div>
+              <div>ARMA: <span>${arch.weaponName}</span></div>
+              <div style="margin-top:6px; color:#aaddaa;">${arch.desc}</div>
+            </div>
+          </div>
+          <button class="btn-sys" style="width:100%;">[ INICIAR CON ${arch.name} ]</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Algoritmo Procedural: Drunkard's Walk + Texturas de Muro Variadas
+    function generateNewDungeon() {
+      // Llenar mapa con muros aleatorios de 3 estilos distintos
+      map = Array.from({ length: MAP_SIZE }, () =>
+        Array.from({ length: MAP_SIZE }, () => {
+          const r = Math.random();
+          if (r < 0.55) return 1; // Concreto
+          if (r < 0.80) return 2; // Servidores
+          return 3;               // Reja Neón
+        })
+      );
+
+      let cx = 1;
+      let cy = 1;
+      map[cy][cx] = 0;
+      const floorCells = [{ x: cx, y: cy }];
+      const targetFloors = 58;
+
+      // Caminata aleatoria garantizando conectividad
+      let safety = 0;
+      while (floorCells.length < targetFloors && safety < 2000) {
+        safety++;
+        const d = Math.floor(Math.random() * 4);
+        const nx = cx + DX[d];
+        const ny = cy + DY[d];
+
+        if (nx > 0 && nx < MAP_SIZE - 1 && ny > 0 && ny < MAP_SIZE - 1) {
+          cx = nx;
+          cy = ny;
+          if (map[cy][cx] !== 0) {
+            map[cy][cx] = 0;
+            floorCells.push({ x: cx, y: cy });
+          }
+        }
+      }
+
+      // Mezclar celdas libres (excluyendo inicio 1,1) para colocar objetos y enemigos
+      const available = floorCells.slice(1).sort(() => Math.random() - 0.5);
+
+      // Colocar Núcleo (C) lo más lejos posible del inicio
+      available.sort((a, b) => (b.x + b.y) - (a.x + a.y));
+      const coreCell = available.shift();
+      map[coreCell.y][coreCell.x] = 5;
+
+      // Re-mezclar el resto para fragmentos y enemigos
+      available.sort(() => Math.random() - 0.5);
+
+      // Colocar 3 Fragmentos de Datos (K)
+      for (let i = 0; i < 3 && available.length > 0; i++) {
+        const c = available.shift();
+        map[c.y][c.x] = 4;
+      }
+
+      // Colocar 5 Enemigos (E)
+      for (let i = 0; i < 5 && available.length > 0; i++) {
+        const c = available.shift();
+        map[c.y][c.x] = 8;
+      }
+
+      // Reiniciar posición y estado
+      state.x = 1;
+      state.y = 1;
+      state.dir = 1;
+      state.keys = 0;
+      state.inCombat = false;
+      state.enemy = null;
+      state.hp = state.maxHp;
+      state.ram = state.maxRam;
+
+      document.getElementById('enemy-banner').classList.remove('active');
+      document.getElementById('log-feed').innerHTML = '';
+      addLog('Nueva topología procedural generada.', 'sys');
+      addLog('Recolecta los 3 Fragmentos [K] y llega al Núcleo [C].', 'loot');
+      renderAll();
+    }
+
+    function startGame(archIndex) {
+      const arch = ARCHETYPES[archIndex];
+      state.archetype = arch;
+      state.maxHp = arch.hp;
+      state.hp = arch.hp;
+      state.maxRam = arch.ram;
+      state.ram = arch.ram;
+      state.atk = arch.atk;
+
+      document.getElementById('hud-class-label').textContent = arch.name;
+      document.getElementById('hud-atk-val').textContent = arch.atk;
+      document.getElementById('btn-atk-name').textContent = `⚔️ ${arch.weaponName}`;
+      document.getElementById('btn-skl-name').textContent = `⚡ ${arch.skillName}`;
+
+      document.getElementById('char-select-screen').style.display = 'none';
+      document.getElementById('game-screen').classList.add('active');
+
+      generateNewDungeon();
+    }
+
+    function returnToSelect() {
+      document.getElementById('game-screen').classList.remove('active');
+      document.getElementById('char-select-screen').style.display = 'flex';
+    }
+
+    // ==========================================
+    // 4. MOVIMIENTO Y EVENTOS DE CELDA
+    // ==========================================
+    function handleMove(action) {
+      if (state.inCombat) {
+        addLog('¡Anomalía bloqueando el paso! Derrota al enemigo primero.', 'dmg');
+        return;
+      }
+
+      if (action === 'left') {
+        state.dir = (state.dir + 3) % 4;
+      } else if (action === 'right') {
+        state.dir = (state.dir + 1) % 4;
+      } else {
+        const step = action === 'forward' ? 1 : -1;
+        const nx = state.x + DX[state.dir] * step;
+        const ny = state.y + DY[state.dir] * step;
+        const target = map[ny]?.[nx];
+
+        if (target === undefined || [1, 2, 3].includes(target)) {
+          addLog('Colisión con estructura sólida.');
+          return;
+        }
+
+        state.x = nx;
+        state.y = ny;
+        state.bobOffset = state.bobOffset === 0 ? 6 : 0; // Head-bobbing del arma
+        checkTileEvents();
+      }
+      renderAll();
+    }
+
+    function checkTileEvents() {
+      const cell = map[state.y][state.x];
+      if (cell === 4) {
+        state.keys++;
+        map[state.y][state.x] = 0;
+        triggerPortraitReaction('grin', 1200);
+        addLog(`¡Fragmento de Datos extraído! (${state.keys}/3)`, 'loot');
+      } else if (cell === 8) {
+        map[state.y][state.x] = 0;
+        triggerCombat();
+      } else if (cell === 5) {
+        if (state.keys >= 3) {
+          triggerPortraitReaction('grin', 2500);
+          document.getElementById('reward-modal').classList.add('active');
+          addLog('¡NÚCLEO DESBLOQUEADO! Acceso Root obtenido.', 'sys');
+        } else {
+          addLog(`Núcleo sellado. Faltan ${3 - state.keys} Fragmentos de Datos [K].`, 'dmg');
+        }
+      }
+    }
+
+    function actionScan() {
+      if (state.inCombat) return;
+      const fx = state.x + DX[state.dir];
+      const fy = state.y + DY[state.dir];
+      const front = map[fy]?.[fx];
+      if ([1, 2, 3].includes(front)) {
+        addLog(`Escáner frontal: ${WALL_NAMES[front]}`, 'sys');
+      } else if (front === 4) {
+        addLog('Escáner frontal: ¡Señal de Fragmento de Datos detectada!', 'loot');
+      } else if (front === 5) {
+        addLog('Escáner frontal: Núcleo Central del Servidor.', 'sys');
+      } else if (front === 8) {
+        addLog('Escáner frontal: ¡Firma hostil detectada adelante!', 'dmg');
+      } else {
+        addLog('Escáner frontal: Pasillo despejado.', 'sys');
+      }
+    }
+
+    // ==========================================
+    // 5. SISTEMA DE COMBATE Y REACCIONES
+    // ==========================================
+    function triggerCombat() {
+      state.inCombat = true;
+      const tpl = ENEMY_DB[Math.floor(Math.random() * ENEMY_DB.length)];
+      state.enemy = { ...tpl, maxHp: tpl.hp };
+
+      document.getElementById('enemy-banner').classList.add('active');
+      updateEnemyHud();
+      addLog(`⚠️ ¡EMBOSCADA! ${state.enemy.name} intercepta tu conexión.`, 'dmg');
+    }
+
+    function updateEnemyHud() {
+      if (!state.enemy) return;
+      document.getElementById('enemy-hud-name').textContent = state.enemy.name;
+      document.getElementById('enemy-hud-hp').textContent = `HP: ${Math.max(0, state.enemy.hp)}/${state.enemy.maxHp}`;
+      const pct = Math.max(0, (state.enemy.hp / state.enemy.maxHp) * 100);
+      document.getElementById('enemy-hud-bar').style.width = `${pct}%`;
+    }
+
+    function animateWeaponSwing() {
+      state.weaponAttacking = true;
+      renderWeapon();
+      setTimeout(() => {
+        state.weaponAttacking = false;
+        renderWeapon();
+      }, 220);
+    }
+
+    function actionAttack() {
+      if (!state.inCombat) {
+        animateWeaponSwing();
+        addLog(`Pruebas tu ${state.archetype.weaponName} en el aire.`);
+        return;
+      }
+
+      animateWeaponSwing();
+      const dmg = state.atk + Math.floor(Math.random() * 7);
+      state.enemy.hp -= dmg;
+      addLog(`Impactas con ${state.archetype.weaponName}: -${dmg} HP al enemigo.`);
+      updateEnemyHud();
+
+      if (state.enemy.hp <= 0) {
+        winCombat();
+      } else {
+        setTimeout(enemyCounterAttack, 350);
+      }
+    }
+
+    function actionSkill() {
+      if (!state.inCombat) {
+        addLog('No hay objetivos hostiles para ejecutar habilidad.');
+        return;
+      }
+      if (state.ram < 20) {
+        addLog('RAM insuficiente (requiere 20 RAM).', 'dmg');
+        return;
+      }
+
+      state.ram -= 20;
+      animateWeaponSwing();
+      const dmg = Math.floor(state.atk * 1.8) + Math.floor(Math.random() * 8);
+      state.enemy.hp -= dmg;
+      addLog(`⚡ Ejecutas ${state.archetype.skillName}: -${dmg} HP crítico.`, 'sys');
+      updateEnemyHud();
+      renderHud();
+
+      if (state.enemy.hp <= 0) {
+        winCombat();
+      } else {
+        setTimeout(enemyCounterAttack, 350);
+      }
+    }
+
+    function actionHeal() {
+      if (state.ram < 15) {
+        addLog('RAM insuficiente para compilar PARCHE_HP (requiere 15 RAM).', 'dmg');
+        return;
+      }
+      state.ram -= 15;
+      const heal = 30;
+      state.hp = Math.min(state.maxHp, state.hp + heal);
+      triggerPortraitReaction('grin', 800);
+      addLog(`🧪 PARCHE_HP aplicado: +${heal} Integridad.`, 'loot');
+      renderHud();
+
+      if (state.inCombat) {
+        setTimeout(enemyCounterAttack, 350);
+      }
+    }
+
+    function enemyCounterAttack() {
+      if (!state.inCombat || !state.enemy) return;
+      const dmg = Math.max(3, state.enemy.atk + Math.floor(Math.random() * 5) - 2);
+      state.hp -= dmg;
+      triggerPortraitReaction('damaged', 600);
+      addLog(`💥 ${state.enemy.name} golpea tu sistema: -${dmg} HP.`, 'dmg');
+      renderHud();
+
+      if (state.hp <= 0) {
+        addLog('💀 FALLO CRÍTICO DE SISTEMA. Reiniciando en nodo seguro...', 'dmg');
+        state.hp = state.maxHp;
+        state.ram = state.maxRam;
+        state.x = 1;
+        state.y = 1;
+        state.inCombat = false;
+        state.enemy = null;
+        document.getElementById('enemy-banner').classList.remove('active');
+        renderAll();
+      }
+    }
+
+    function winCombat() {
+      addLog(`✔ Anomalía ${state.enemy.name} purgada. +15 RAM recuperada.`, 'loot');
+      state.inCombat = false;
+      state.enemy = null;
+      state.ram = Math.min(state.maxRam, state.ram + 15);
+      document.getElementById('enemy-banner').classList.remove('active');
+      triggerPortraitReaction('grin', 1000);
+      renderAll();
+    }
+
+    // ==========================================
+    // 6. RENDERIZADO 3D ASCII + TEXTURAS + SPRITES
+    // ==========================================
+    function getWallPattern(type, dist, tick) {
+      if (dist === 1) {
+        if (type === 1) return '#';
+        if (type === 2) return tick % 2 === 0 ? '%' : '$';
+        return '+';
+      }
+      if (dist === 2) {
+        if (type === 1) return '=';
+        if (type === 2) return ':';
+        return '-';
+      }
+      return '.';
+    }
+
+    function renderViewport() {
+      const fx = DX[state.dir];
+      const fy = DY[state.dir];
+      const lx = DX[(state.dir + 3) % 4];
+      const ly = DY[(state.dir + 3) % 4];
+      const rx = DX[(state.dir + 1) % 4];
+      const ry = DY[(state.dir + 1) % 4];
+
+      // Celdas a distancia 1, 2 y 3
+      const c1 = map[state.y + fy]?.[state.x + fx] ?? 1;
+      const c2 = map[state.y + fy * 2]?.[state.x + fx * 2] ?? 1;
+      const c3 = map[state.y + fy * 3]?.[state.x + fx * 3] ?? 1;
+
+      const l1 = map[state.y + ly]?.[state.x + lx] ?? 1;
+      const r1 = map[state.y + ry]?.[state.x + rx] ?? 1;
+
+      const isWall = (v) => [1, 2, 3].includes(v);
+
+      const W = 54;
+      const H = 17;
+      let grid = Array.from({ length: H }, () => Array(W).fill(' '));
+
+      // Dibujar marco exterior
+      for (let x = 0; x < W; x++) {
+        grid[0][x] = '-';
+        grid[H - 1][x] = '-';
+      }
+      for (let y = 1; y < H - 1; y++) {
+        grid[y][0] = '|';
+        grid[y][W - 1] = '|';
+      }
+
+      // Dibujar profundidad en perspectiva ASCII
+      if (isWall(c1)) {
+        const ch = getWallPattern(c1, 1, state.animTick);
+        for (let y = 2; y < H - 2; y++) {
+          for (let x = 4; x < W - 4; x++) {
+            grid[y][x] = (y === 2 || y === H - 3) ? '=' : ch;
+          }
+        }
+        document.getElementById('hud-wall-type').textContent = `MURO: ${WALL_NAMES[c1]}`;
+      } else {
+        document.getElementById('hud-wall-type').textContent = 'VÍA: DESPEJADA';
+        // Paredes laterales cercanas
+        for (let y = 2; y < H - 2; y++) {
+          grid[y][4] = isWall(l1) ? '|' : ' ';
+          grid[y][W - 5] = isWall(r1) ? '|' : ' ';
+        }
+
+        if (isWall(c2)) {
+          const ch = getWallPattern(c2, 2, state.animTick);
+          for (let y = 4; y < H - 4; y++) {
+            for (let x = 10; x < W - 10; x++) {
+              grid[y][x] = (y === 4 || y === H - 5) ? '-' : ch;
+            }
+          }
+        } else if (isWall(c3)) {
+          const ch = getWallPattern(c3, 3, state.animTick);
+          for (let y = 6; y < H - 6; y++) {
+            for (let x = 16; x < W - 16; x++) {
+              grid[y][x] = ch;
+            }
+          }
+        } else {
+          // Punto de fuga lejano
+          for (let y = 7; y < H - 7; y++) {
+            for (let x = 21; x < W - 21; x++) {
+              grid[y][x] = '.';
+            }
+          }
+        }
+
+        // Dibujar objetos en el pasillo si no hay combate activo
+        if (!state.inCombat) {
+          if (c1 === 4 || c2 === 4) {
+            drawSpriteCenter(grid, [
+              "  /\\  ",
+              " <KK> ",
+              "  \\/  "
+            ], c1 === 4 ? 9 : 7);
+          } else if (c1 === 5 || c2 === 5) {
+            drawSpriteCenter(grid, [
+              " [CORE] ",
+              " | ** | ",
+              " [____] "
+            ], c1 === 5 ? 9 : 7);
+          }
+        }
+      }
+
+      // Si hay combate, superponer sprite animado del enemigo
+      if (state.inCombat && state.enemy) {
+        const frame = state.enemy.frames[state.animTick % state.enemy.frames.length];
+        drawSpriteCenter(grid, frame, 6);
+      }
+
+      document.getElementById('ascii-canvas').textContent = grid.map(r => r.join('')).join('\n');
+      document.getElementById('hud-coords').textContent =
+        `NODO: [${String(state.x).padStart(2, '0')},${String(state.y).padStart(2, '0')}] // ${DIRS[state.dir]}`;
+    }
+
+    function drawSpriteCenter(grid, spriteLines, startRow) {
+      const W = grid[0].length;
+      spriteLines.forEach((line, idx) => {
+        const row = startRow + idx;
+        if (row >= 1 && row < grid.length - 1) {
+          const startCol = Math.floor((W - line.length) / 2);
+          for (let i = 0; i < line.length; i++) {
+            if (line[i] !== ' ') {
+              grid[row][startCol + i] = line[i];
+            }
+          }
+        }
+      });
+    }
+
+    function renderWeapon() {
+      const el = document.getElementById('weapon-overlay');
+      const frames = state.archetype.weaponFrames;
+      el.textContent = (state.weaponAttacking ? frames[1] : frames[0]).join('\n');
+      const swingX = state.weaponAttacking ? -28 : 0;
+      const swingY = state.weaponAttacking ? -12 : state.bobOffset;
+      el.style.transform = `translate(${swingX}px, ${swingY}px)`;
+    }
+
+    // ==========================================
+    // 7. RETRATO REACTIVO ESTILO DOOMGUY
+    // ==========================================
+    function triggerPortraitReaction(type, durationMs) {
+      state.portraitOverride = type;
+      renderPortrait();
+      setTimeout(() => {
+        state.portraitOverride = null;
+        renderPortrait();
+      }, durationMs);
+    }
+
+    function renderPortrait() {
+      const box = document.getElementById('portrait-box');
+      const pre = document.getElementById('doom-portrait');
+      const p = state.archetype.portraits;
+
+      box.classList.remove('damaged', 'grin');
+
+      let art = p.healthy;
+      if (state.portraitOverride === 'damaged') {
+        art = p.bruised;
+        box.classList.add('damaged');
+      } else if (state.portraitOverride === 'grin') {
+        art = p.grin;
+        box.classList.add('grin');
+      } else {
+        const hpRatio = state.hp / state.maxHp;
+        if (hpRatio <= 0.3) {
+          art = p.critical;
+          box.classList.add('damaged');
+        } else if (hpRatio <= 0.65) {
+          art = p.bruised;
+        } else {
+          if (state.lookDir === 1) art = p.lookLeft;
+          else if (state.lookDir === 2) art = p.lookRight;
+          else art = p.healthy;
+        }
+      }
+
+      pre.textContent = art.join('\n');
+    }
+
+    function renderHud() {
+      document.getElementById('hud-hp-text').textContent = `${Math.max(0, state.hp)}/${state.maxHp}`;
+      document.getElementById('hud-hp-bar').style.width = `${Math.max(0, (state.hp / state.maxHp) * 100)}%`;
+
+      document.getElementById('hud-ram-text').textContent = `${state.ram}/${state.maxRam}`;
+      document.getElementById('hud-ram-bar').style.width = `${(state.ram / state.maxRam) * 100}%`;
+
+      document.getElementById('hud-keys-val').textContent = `${state.keys}/3`;
+      renderPortrait();
+    }
+
+    function renderMinimap() {
+      let out = '';
+      for (let y = 0; y < MAP_SIZE; y++) {
+        for (let x = 0; x < MAP_SIZE; x++) {
+          if (x === state.x && y === state.y) {
+            out += '@';
+          } else {
+            const v = map[y][x];
+            if (v === 0) out += '.';
+            else if (v === 1) out += '#';
+            else if (v === 2) out += '%';
+            else if (v === 3) out += '+';
+            else if (v === 4) out += 'K';
+            else if (v === 5) out += 'C';
+            else if (v === 8) out += 'E';
+          }
+        }
+        out += '\n';
+      }
+      document.getElementById('minimap-display').textContent = out;
+    }
+
+    function renderAll() {
+      renderViewport();
+      renderWeapon();
+      renderHud();
+      renderMinimap();
+    }
+
+    function addLog(msg, cls = '') {
+      const feed = document.getElementById('log-feed');
+      const div = document.createElement('div');
+      div.className = `log-msg ${cls}`;
+      div.textContent = `> ${msg}`;
+      feed.appendChild(div);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    // ==========================================
+    // 8. HUEVO DE PASCUA DESCARGABLE (SVG ART)
+    // ==========================================
+    function closeModal() {
+      document.getElementById('reward-modal').classList.remove('active');
+    }
+
+    setInterval(() => {
+      if (!document.getElementById('game-screen').classList.contains('active')) return;
+      state.animTick++;
+      // Mirada aleatoria del retrato estilo Doomguy
+      if (state.animTick % 3 === 0) {
+        state.lookDir = Math.floor(Math.random() * 3);
+        renderPortrait();
+      }
+      renderViewport();
+    }, 550);
+
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('game-screen').classList.contains('active')) return;
+      const k = e.key.toLowerCase();
+      if (k === 'w' || k === 'arrowup') handleMove('forward');
+      else if (k === 's' || k === 'arrowdown') handleMove('back');
+      else if (k === 'a' || k === 'arrowleft') handleMove('left');
+      else if (k === 'd' || k === 'arrowright') handleMove('right');
+      else if (k === ' ') { e.preventDefault(); actionAttack(); }
+      else if (k === 'e') actionScan();
+    });
+
+    window.onload = initArchetypeSelection;
+  </script>
+</body>
+</html>
