@@ -35,7 +35,6 @@
       overflow-x: hidden;
     }
 
-    /* Efecto CRT Scanlines */
     body::after {
       content: "";
       position: fixed;
@@ -51,7 +50,6 @@
       z-index: 999;
     }
 
-    /* HEADER */
     header {
       display: flex;
       justify-content: space-between;
@@ -90,7 +88,6 @@
       color: #000;
     }
 
-    /* PANTALLA DE SELECCIÓN DE PERSONAJE */
     #char-select-screen {
       flex: 1;
       display: flex;
@@ -175,7 +172,6 @@
       font-weight: 700;
     }
 
-    /* INTERFAZ PRINCIPAL DEL JUEGO */
     #game-screen {
       display: none;
       flex: 1;
@@ -191,7 +187,6 @@
       display: grid;
     }
 
-    /* COLUMNA IZQUIERDA: VIEWPORT + CONTROLES */
     .viewport-col {
       display: flex;
       flex-direction: column;
@@ -233,7 +228,6 @@
       letter-spacing: 1px;
     }
 
-    /* OVERLAY DE ARMA EN PRIMERA PERSONA */
     #weapon-overlay {
       position: absolute;
       bottom: 4px;
@@ -248,7 +242,6 @@
       transition: transform 0.08s ease;
     }
 
-    /* HUD DE ENEMIGO EN COMBATE */
     #enemy-banner {
       display: none;
       position: absolute;
@@ -288,7 +281,6 @@
       transition: width 0.2s ease;
     }
 
-    /* PANEL DE CONTROLES */
     .controls-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -368,14 +360,12 @@
     .btn-act.heal { border-color: var(--amber); color: var(--amber); }
     .btn-act.heal:hover { background: var(--amber); color: #000; }
 
-    /* COLUMNA DERECHA: DOOMGUY HUD + MINIMAPA + LOG */
     .hud-col {
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
 
-    /* DOOMGUY PORTRAIT & STATS */
     .doom-hud {
       border: 2px solid var(--fg);
       background: #020702;
@@ -453,7 +443,6 @@
       background: var(--cyan);
     }
 
-    /* MINIMAPA */
     .minimap-box {
       border: 2px solid var(--fg);
       background: #020702;
@@ -478,7 +467,6 @@
       text-align: center;
     }
 
-    /* CONSOLA LOG */
     .log-box {
       border: 2px solid var(--fg);
       background: #000;
@@ -504,7 +492,6 @@
     .log-msg.loot { color: var(--amber); }
     .log-msg.sys { color: var(--cyan); }
 
-    /* MODAL DE RECOMPENSA (HUEVO DE PASCUA) */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -566,7 +553,6 @@
       background: var(--white);
     }
 
-    /* RESPONSIVE */
     @media (max-width: 920px) {
       #game-screen.active {
         grid-template-columns: 1fr;
@@ -587,7 +573,6 @@
     </div>
   </header>
 
-  <!-- PANTALLA 1: SELECCIÓN DE PERSONAJE -->
   <section id="char-select-screen">
     <h1 class="select-title">SELECCIONA TU ARQUETIPO DIGITAL</h1>
     <p class="select-sub">Explora el laberinto procedural, sobrevive a las anomalías y extrae los 3 Fragmentos de Datos.</p>
@@ -595,9 +580,7 @@
     <div class="archetype-grid" id="archetype-cards"></div>
   </section>
 
-  <!-- PANTALLA 2: JUEGO EN PRIMERA PERSONA -->
   <main id="game-screen">
-    <!-- IZQUIERDA: VIEWPORT 3D ASCII + CONTROLES -->
     <div class="viewport-col">
       <div class="viewport-box">
         <div class="viewport-hud-top">
@@ -642,7 +625,6 @@
       </div>
     </div>
 
-    <!-- DERECHA: RETRATO DOOMGUY + MINIMAPA + LOG -->
     <div class="hud-col">
       <div class="doom-hud">
         <div class="portrait-frame" id="portrait-box">
@@ -687,7 +669,6 @@
     </div>
   </main>
 
-  <!-- MODAL EASTER EGG -->
   <div class="modal-overlay" id="reward-modal">
     <div class="modal-card">
       <h2 class="modal-title">// ACCESO ROOT CONCEDIDO //</h2>
@@ -705,9 +686,7 @@
   </div>
 
   <script>
-    // ==========================================
-    // 1. DEFINICIÓN DE ARQUETIPOS Y RETRATOS DOOM
-    // ==========================================
+
     const ARCHETYPES = [
       {
         id: 'netrunner',
@@ -923,9 +902,7 @@
       }
     ];
 
-    // ==========================================
-    // 2. ENEMIGOS CON SPRITES ASCII MULTI-FRAME
-    // ==========================================
+
     const ENEMY_DB = [
       {
         name: 'VIRUS_TROYANO.v4',
@@ -998,9 +975,7 @@
       }
     ];
 
-    // ==========================================
-    // 3. ESTADO GLOBAL Y GENERADOR PROCEDURAL
-    // ==========================================
+
     const MAP_SIZE = 13;
     let map = [];
     // Códigos de celda:
@@ -1042,7 +1017,6 @@
       lookDir: 0
     };
 
-    // Inicializar tarjetas de selección
     function initArchetypeSelection() {
       const container = document.getElementById('archetype-cards');
       container.innerHTML = '';
@@ -1066,9 +1040,7 @@
       });
     }
 
-    // Algoritmo Procedural: Drunkard's Walk + Texturas de Muro Variadas
     function generateNewDungeon() {
-      // Llenar mapa con muros aleatorios de 3 estilos distintos
       map = Array.from({ length: MAP_SIZE }, () =>
         Array.from({ length: MAP_SIZE }, () => {
           const r = Math.random();
@@ -1084,7 +1056,6 @@
       const floorCells = [{ x: cx, y: cy }];
       const targetFloors = 58;
 
-      // Caminata aleatoria garantizando conectividad
       let safety = 0;
       while (floorCells.length < targetFloors && safety < 2000) {
         safety++;
@@ -1102,30 +1073,24 @@
         }
       }
 
-      // Mezclar celdas libres (excluyendo inicio 1,1) para colocar objetos y enemigos
       const available = floorCells.slice(1).sort(() => Math.random() - 0.5);
 
-      // Colocar Núcleo (C) lo más lejos posible del inicio
       available.sort((a, b) => (b.x + b.y) - (a.x + a.y));
       const coreCell = available.shift();
       map[coreCell.y][coreCell.x] = 5;
 
-      // Re-mezclar el resto para fragmentos y enemigos
       available.sort(() => Math.random() - 0.5);
 
-      // Colocar 3 Fragmentos de Datos (K)
       for (let i = 0; i < 3 && available.length > 0; i++) {
         const c = available.shift();
         map[c.y][c.x] = 4;
       }
 
-      // Colocar 5 Enemigos (E)
       for (let i = 0; i < 5 && available.length > 0; i++) {
         const c = available.shift();
         map[c.y][c.x] = 8;
       }
 
-      // Reiniciar posición y estado
       state.x = 1;
       state.y = 1;
       state.dir = 1;
@@ -1167,9 +1132,7 @@
       document.getElementById('char-select-screen').style.display = 'flex';
     }
 
-    // ==========================================
-    // 4. MOVIMIENTO Y EVENTOS DE CELDA
-    // ==========================================
+
     function handleMove(action) {
       if (state.inCombat) {
         addLog('¡Anomalía bloqueando el paso! Derrota al enemigo primero.', 'dmg');
@@ -1193,7 +1156,7 @@
 
         state.x = nx;
         state.y = ny;
-        state.bobOffset = state.bobOffset === 0 ? 6 : 0; // Head-bobbing del arma
+        state.bobOffset = state.bobOffset === 0 ? 6 : 0;
         checkTileEvents();
       }
       renderAll();
@@ -1238,9 +1201,7 @@
       }
     }
 
-    // ==========================================
-    // 5. SISTEMA DE COMBATE Y REACCIONES
-    // ==========================================
+
     function triggerCombat() {
       state.inCombat = true;
       const tpl = ENEMY_DB[Math.floor(Math.random() * ENEMY_DB.length)];
@@ -1361,9 +1322,7 @@
       renderAll();
     }
 
-    // ==========================================
-    // 6. RENDERIZADO 3D ASCII + TEXTURAS + SPRITES
-    // ==========================================
+
     function getWallPattern(type, dist, tick) {
       if (dist === 1) {
         if (type === 1) return '#';
@@ -1386,7 +1345,6 @@
       const rx = DX[(state.dir + 1) % 4];
       const ry = DY[(state.dir + 1) % 4];
 
-      // Celdas a distancia 1, 2 y 3
       const c1 = map[state.y + fy]?.[state.x + fx] ?? 1;
       const c2 = map[state.y + fy * 2]?.[state.x + fx * 2] ?? 1;
       const c3 = map[state.y + fy * 3]?.[state.x + fx * 3] ?? 1;
@@ -1400,7 +1358,6 @@
       const H = 17;
       let grid = Array.from({ length: H }, () => Array(W).fill(' '));
 
-      // Dibujar marco exterior
       for (let x = 0; x < W; x++) {
         grid[0][x] = '-';
         grid[H - 1][x] = '-';
@@ -1410,7 +1367,6 @@
         grid[y][W - 1] = '|';
       }
 
-      // Dibujar profundidad en perspectiva ASCII
       if (isWall(c1)) {
         const ch = getWallPattern(c1, 1, state.animTick);
         for (let y = 2; y < H - 2; y++) {
@@ -1421,7 +1377,6 @@
         document.getElementById('hud-wall-type').textContent = `MURO: ${WALL_NAMES[c1]}`;
       } else {
         document.getElementById('hud-wall-type').textContent = 'VÍA: DESPEJADA';
-        // Paredes laterales cercanas
         for (let y = 2; y < H - 2; y++) {
           grid[y][4] = isWall(l1) ? '|' : ' ';
           grid[y][W - 5] = isWall(r1) ? '|' : ' ';
@@ -1442,7 +1397,6 @@
             }
           }
         } else {
-          // Punto de fuga lejano
           for (let y = 7; y < H - 7; y++) {
             for (let x = 21; x < W - 21; x++) {
               grid[y][x] = '.';
@@ -1450,7 +1404,6 @@
           }
         }
 
-        // Dibujar objetos en el pasillo si no hay combate activo
         if (!state.inCombat) {
           if (c1 === 4 || c2 === 4) {
             drawSpriteCenter(grid, [
@@ -1468,7 +1421,6 @@
         }
       }
 
-      // Si hay combate, superponer sprite animado del enemigo
       if (state.inCombat && state.enemy) {
         const frame = state.enemy.frames[state.animTick % state.enemy.frames.length];
         drawSpriteCenter(grid, frame, 6);
@@ -1503,9 +1455,7 @@
       el.style.transform = `translate(${swingX}px, ${swingY}px)`;
     }
 
-    // ==========================================
-    // 7. RETRATO REACTIVO ESTILO DOOMGUY
-    // ==========================================
+
     function triggerPortraitReaction(type, durationMs) {
       state.portraitOverride = type;
       renderPortrait();
@@ -1595,9 +1545,7 @@
       feed.scrollTop = feed.scrollHeight;
     }
 
-    // ==========================================
-    // 8. HUEVO DE PASCUA DESCARGABLE (SVG ART)
-    // ==========================================
+
     function closeModal() {
       document.getElementById('reward-modal').classList.remove('active');
     }
