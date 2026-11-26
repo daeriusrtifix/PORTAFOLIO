@@ -82,7 +82,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* NAVIGATION MENU */
     .main-nav {
       display: flex;
       flex-wrap: wrap;
@@ -120,7 +119,6 @@
       text-transform: uppercase;
     }
 
-    /* SECTIONS SYSTEM */
     .view-section {
       display: none;
       flex: 1;
@@ -165,7 +163,6 @@
       text-transform: uppercase;
     }
 
-    /* PORTADA (INICIO) STYLES */
     .col-left {
       display: flex;
       flex-direction: column;
@@ -350,7 +347,6 @@
       color: var(--btn-secondary-text);
     }
 
-    /* GENERAL GRIDS & BOXES */
     .grid-2 {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -383,7 +379,6 @@
       margin-bottom: 10px;
     }
 
-    /* AUDIO / VIDEO MEDIA SLOTS */
     .media-slot {
       border: 1px dashed var(--border-color);
       padding: 16px;
@@ -400,7 +395,6 @@
       color: var(--text-accent);
     }
 
-    /* METHODOLOGY FLOWCHART */
     .flowchart {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -422,7 +416,6 @@
       margin-bottom: 6px;
     }
 
-    /* PORTFOLIO PROJECTS GRID */
     .project-card {
       border: var(--border-width) solid var(--border-color);
       display: flex;
@@ -478,7 +471,6 @@
       text-transform: uppercase;
     }
 
-    /* MODAL FOR PROJECT DETAILS */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -532,7 +524,6 @@
       background: var(--bg-subtle);
     }
 
-    /* FORM STYLES */
     .form-group {
       margin-bottom: 16px;
     }
@@ -555,7 +546,6 @@
       font-size: 0.9rem;
     }
 
-    /* FOOTER & EASTER EGG */
     footer {
       border-top: var(--border-width) solid var(--border-color);
       padding: 16px 32px;
@@ -609,7 +599,6 @@
 </head>
 <body>
 
-  <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
   <header>
     <div class="brand-group" onclick="navegar('inicio')">
       <svg viewBox="0 0 40 48" width="30" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -632,7 +621,6 @@
     </nav>
   </header>
 
-  <!-- 1. SECCIÓN: PORTADA / INICIO -->
   <section id="sec-inicio" class="view-section active">
     <div class="col-left">
       <div class="status-box">
@@ -733,7 +721,7 @@
 
   <section id="sec-quien-soy" class="view-section">
     <div class="section-header">
-      <h2 class="section-title" data-formal="¿Quién Soy?" data-caos="IDENTIDAD // SUJETO 734">¿Quién Soy?</h2>
+      <h2 class="section-title" data-formal="¿Quién Soy?" data-caos="IDENTIDAD // SUJETO 635">¿Quién Soy?</h2>
       <span class="section-subtitle">Perfil Personal // Ángel Darío Cardona Nuño (Daerius)</span>
     </div>
 
@@ -765,7 +753,7 @@
 
   <section id="sec-marca" class="view-section">
     <div class="section-header">
-      <h2 class="section-title" data-formal="¿Qué es MI MARCA?" data-caos="SISTEMA DE MARCA // [D]AERIUS">¿Qué es MI MARCA?</h2>
+      <h2 class="section-title" data-formal="¿Qué es MI MARCA?" data-caos="SISTEMA DE MARCA // [D]AERIUS">¿Qué es Daerius Agency?</h2>
       <span class="section-subtitle">Identidad Profesional // DAERIUS.AGENCY</span>
     </div>
 
@@ -804,7 +792,6 @@
     </div>
   </section>
 
-  <!-- 4. SECCIÓN: SERVICIOS -->
   <section id="sec-servicios" class="view-section">
     <div class="section-header">
       <h2 class="section-title" data-formal="Servicios" data-caos="MÓDULOS DE SERVICIO //_">Servicios</h2>
@@ -844,14 +831,12 @@
     </div>
   </section>
 
-  <!-- 5. SECCIÓN: PORTAFOLIO (METODOLOGÍA + 5 PROYECTOS) -->
   <section id="sec-portafolio" class="view-section">
     <div class="section-header">
       <h2 class="section-title" data-formal="Portafolio" data-caos="ARCHIVOS DE OBRA [5]">Portafolio</h2>
       <span class="section-subtitle">Metodología y Proyectos Seleccionados</span>
     </div>
 
-    <!-- FLUJOGRAMA DE METODOLOGÍA -->
     <h3 style="margin-bottom:12px; text-transform:uppercase; font-size:1rem;">Flujograma de Metodología General de Trabajo</h3>
     <div class="flowchart">
       <div class="flow-step">
